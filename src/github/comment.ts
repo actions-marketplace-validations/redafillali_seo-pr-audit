@@ -1,0 +1,65 @@
+import * as core from '@actions/core';
+import type { Config } from '../config.js';
+import { COMMENT_MARKER } from '../report/markdown.js';
+
+export interface CommentApi {
+  list(): Promise<{ id: number; body?: string | null }[]>;
+  create(body: string): Promise<void>;
+  update(id: number, body: string): Promise<void>;
+}
+
+export type CommentResult = 'created' | 'updated' | 'skipped';
+
+/** Pull request number from the event payload, or undefined for any other event. */
+export function pullRequestNumber(payload: {
+  pull_request?: { number?: number };
+}): number | undefined {
+  return payload.pull_request?.number;
+}
+
+/** Octokit → CommentApi for one issue/PR. */
+export function octokitCommentApi(
+  octokit: ReturnType<typeof import('@actions/github').getOctokit>,
+  repo: { owner: string; repo: string },
+  issue_number: number,
+): CommentApi {
+  return {
+    list: () =>
+      octokit.paginate(octokit.rest.issues.listComments, { ...repo, issue_number, per_page: 100 }),
+    create: async (body) =>
+      void (await octokit.rest.issues.createComment({ ...repo, issue_number, body })),
+    update: async (comment_id, body) =>
+      void (await octokit.rest.issues.updateComment({ ...repo, comment_id, body })),
+  };
+}
+
+/**
+ * `update` mode edits the comment carrying the marker (or creates it); `new` always creates.
+ * A 403 (read-only fork token) only produces a warning.
+ */
+export async function postComment(
+  api: CommentApi,
+  body: string,
+  mode: Config['commentMode'],
+  marker = COMMENT_MARKER,
+): Promise<CommentResult> {
+  try {
+    if (mode === 'update') {
+      const existing = (await api.list()).find((c) => c.body?.includes(marker));
+      if (existing) {
+        await api.update(existing.id, body);
+        return 'updated';
+      }
+    }
+    await api.create(body);
+    return 'created';
+  } catch (e) {
+    if ((e as { status?: number }).status === 403) {
+      core.warning(
+        'Could not post the PR comment: the token is read-only (fork PR?). The report is in the job summary; see docs/forks.md.',
+      );
+      return 'skipped';
+    }
+    throw e;
+  }
+}

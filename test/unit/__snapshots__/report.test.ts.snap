@@ -1,0 +1,113 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`markdown snapshots > ok report 1`] = `
+"<!-- seo-pr-audit:v1 -->
+## 🔎 SEO PR Audit — all checks passed
+
+| Page | Perf | A11y | BP | SEO | Checks |
+|---|---|---|---|---|---|
+| \`/\` | 🟢 94 | 🟢 98 | 🟢 100 | 🟢 100 | ✅ |
+
+<sub>[View workflow run](https://github.com/o/r/actions/runs/42)</sub>
+"
+`;
+
+exports[`markdown snapshots > report with errors 1`] = `
+"<!-- seo-pr-audit:v1 -->
+## 🔎 SEO PR Audit — 3 errors, 1 warning
+
+| Page | Perf | A11y | BP | SEO | Checks |
+|---|---|---|---|---|---|
+| \`/\` | 🟢 94 | 🟢 98 | 🟢 100 | 🟢 100 | ✅ |
+| \`/blog/\` | 🟠 71 | 🟢 92 | 🟢 96 | 🟠 83 | ❌ 2 · ⚠️ 1 |
+
+**Threshold failures**
+
+- ❌ /blog/: seo 83 &lt; 90
+
+<details><summary>/blog/ — details</summary>
+
+- ❌ **meta-description** — missing &lt;meta name="description"&gt;
+- ❌ **broken-links** — 1 broken link
+  - \`http://x/blog/old-post → 404\`
+- ⚠️ **title** — 72 characters (recommended ≤ 60)
+
+</details>
+
+<sub>[View workflow run](https://github.com/o/r/actions/runs/42)</sub>
+"
+`;
+
+exports[`markdown snapshots > truncated report 1`] = `
+"<!-- seo-pr-audit:v1 -->
+## 🔎 SEO PR Audit — 40 errors
+
+| Page | Perf | A11y | BP | SEO | Checks |
+|---|---|---|---|---|---|
+| \`/p0/\` | 🟠 71 | 🟢 92 | 🟢 96 | 🟠 83 | ❌ 1 |
+| \`/p1/\` | 🟠 71 | 🟢 92 | 🟢 96 | 🟠 83 | ❌ 1 |
+| \`/p2/\` | 🟠 71 | 🟢 92 | 🟢 96 | 🟠 83 | ❌ 1 |
+| \`/p3/\` | 🟠 71 | 🟢 92 | 🟢 96 | 🟠 83 | ❌ 1 |
+| \`/p4/\` | 🟠 71 | 🟢 92 | 🟢 96 | 🟠 83 | ❌ 1 |
+| \`/p5/\` | 🟠 71 | 🟢 92 | 🟢 96 | 🟠 83 | ❌ 1 |
+| \`/p6/\` | 🟠 71 | 🟢 92 | 🟢 96 | 🟠 83 | ❌ 1 |
+| \`/p7/\` | 🟠 71 | 🟢 92 | 🟢 96 | 🟠 83 | ❌ 1 |
+| \`/p8/\` | 🟠 71 | 🟢 92 | 🟢 96 | 🟠 83 | ❌ 1 |
+| \`/p9/\` | 🟠 71 | 🟢 92 | 🟢 96 | 🟠 83 | ❌ 1 |
+| \`/p10/\` | 🟠 71 | 🟢 92 | 🟢 96 | 🟠 83 | ❌ 1 |
+| \`/p11/\` | 🟠 71 | 🟢 92 | 🟢 96 | 🟠 83 | ❌ 1 |
+| \`/p12/\` | 🟠 71 | 🟢 92 | 🟢 96 | 🟠 83 | ❌ 1 |
+| \`/p13/\` | 🟠 71 | 🟢 92 | 🟢 96 | 🟠 83 | ❌ 1 |
+| \`/p14/\` | 🟠 71 | 🟢 92 | 🟢 96 | 🟠 83 | ❌ 1 |
+| \`/p15/\` | 🟠 71 | 🟢 92 | 🟢 96 | 🟠 83 | ❌ 1 |
+| \`/p16/\` | 🟠 71 | 🟢 92 | 🟢 96 | 🟠 83 | ❌ 1 |
+| \`/p17/\` | 🟠 71 | 🟢 92 | 🟢 96 | 🟠 83 | ❌ 1 |
+| \`/p18/\` | 🟠 71 | 🟢 92 | 🟢 96 | 🟠 83 | ❌ 1 |
+| \`/p19/\` | 🟠 71 | 🟢 92 | 🟢 96 | 🟠 83 | ❌ 1 |
+| \`/p20/\` | 🟠 71 | 🟢 92 | 🟢 96 | 🟠 83 | ❌ 1 |
+| \`/p21/\` | 🟠 71 | 🟢 92 | 🟢 96 | 🟠 83 | ❌ 1 |
+| \`/p22/\` | 🟠 71 | 🟢 92 | 🟢 96 | 🟠 83 | ❌ 1 |
+| \`/p23/\` | 🟠 71 | 🟢 92 | 🟢 96 | 🟠 83 | ❌ 1 |
+| \`/p24/\` | 🟠 71 | 🟢 92 | 🟢 96 | 🟠 83 | ❌ 1 |
+| \`/p25/\` | 🟠 71 | 🟢 92 | 🟢 96 | 🟠 83 | ❌ 1 |
+| \`/p26/\` | 🟠 71 | 🟢 92 | 🟢 96 | 🟠 83 | ❌ 1 |
+| \`/p27/\` | 🟠 71 | 🟢 92 | 🟢 96 | 🟠 83 | ❌ 1 |
+| \`/p28/\` | 🟠 71 | 🟢 92 | 🟢 96 | 🟠 83 | ❌ 1 |
+| \`/p29/\` | 🟠 71 | 🟢 92 | 🟢 96 | 🟠 83 | ❌ 1 |
+| \`/p30/\` | 🟠 71 | 🟢 92 | 🟢 96 | 🟠 83 | ❌ 1 |
+| \`/p31/\` | 🟠 71 | 🟢 92 | 🟢 96 | 🟠 83 | ❌ 1 |
+| \`/p32/\` | 🟠 71 | 🟢 92 | 🟢 96 | 🟠 83 | ❌ 1 |
+| \`/p33/\` | 🟠 71 | 🟢 92 | 🟢 96 | 🟠 83 | ❌ 1 |
+| \`/p34/\` | 🟠 71 | 🟢 92 | 🟢 96 | 🟠 83 | ❌ 1 |
+| \`/p35/\` | 🟠 71 | 🟢 92 | 🟢 96 | 🟠 83 | ❌ 1 |
+| \`/p36/\` | 🟠 71 | 🟢 92 | 🟢 96 | 🟠 83 | ❌ 1 |
+| \`/p37/\` | 🟠 71 | 🟢 92 | 🟢 96 | 🟠 83 | ❌ 1 |
+| \`/p38/\` | 🟠 71 | 🟢 92 | 🟢 96 | 🟠 83 | ❌ 1 |
+| \`/p39/\` | 🟠 71 | 🟢 92 | 🟢 96 | 🟠 83 | ❌ 1 |
+
+_Output truncated to fit the comment size limit — see the job summary for all details._
+
+<sub>[View workflow run](https://github.com/o/r/actions/runs/42)</sub>
+"
+`;
+
+exports[`markdown snapshots > without lighthouse 1`] = `
+"<!-- seo-pr-audit:v1 -->
+## 🔎 SEO PR Audit — 2 errors, 1 warning
+
+| Page | Checks |
+|---|---|
+| \`/blog/\` | ❌ 2 · ⚠️ 1 |
+
+<details><summary>/blog/ — details</summary>
+
+- ❌ **meta-description** — missing &lt;meta name="description"&gt;
+- ❌ **broken-links** — 1 broken link
+  - \`http://x/blog/old-post → 404\`
+- ⚠️ **title** — 72 characters (recommended ≤ 60)
+
+</details>
+
+<sub>[View workflow run](https://github.com/o/r/actions/runs/42)</sub>
+"
+`;
