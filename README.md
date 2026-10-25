@@ -2,7 +2,7 @@
 
 > A GitHub Action that runs **Lighthouse** and a **basic SEO check** on every pull request, then posts the results as a single, auto-updated PR comment.
 
-[![CI](https://github.com/OWNER/seo-pr-audit/actions/workflows/ci.yml/badge.svg)](https://github.com/OWNER/seo-pr-audit/actions/workflows/ci.yml)
+[![CI](https://github.com/redafillali/seo-pr-audit/actions/workflows/ci.yml/badge.svg)](https://github.com/redafillali/seo-pr-audit/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 Catch SEO regressions **before** they reach production: a missing `<title>`, a deleted meta description, two `<h1>`, a wrong canonical, a broken internal link, or a performance drop.
@@ -62,7 +62,7 @@ jobs:
         with: { node-version: 22 }
       - run: npm ci && npm run build
 
-      - uses: OWNER/seo-pr-audit@v1
+      - uses: redafillali/seo-pr-audit@v1
         with:
           static-dir: ./dist
           paths: |
@@ -74,7 +74,7 @@ jobs:
 ### Running server (Laravel, Next.js, WordPress in Docker…)
 
 ```yaml
-- uses: OWNER/seo-pr-audit@v1
+- uses: redafillali/seo-pr-audit@v1
   with:
     start-command: php artisan serve --port=8000
     base-url: http://127.0.0.1:8000
@@ -87,7 +87,7 @@ jobs:
 ### Preview deployment (Vercel, Netlify, Cloudflare Pages…)
 
 ```yaml
-- uses: OWNER/seo-pr-audit@v1
+- uses: redafillali/seo-pr-audit@v1
   with:
     base-url: ${{ steps.preview.outputs.url }}
     paths: /,/pricing
