@@ -32,6 +32,7 @@
     "@actions/exec": "^3.0.0",
     "@actions/github": "^9.1.1",
     "cheerio": "^1.2.0",
+    "p-limit": "^7.3.3",
     "sirv": "^3.0.2",
     "yaml": "^2.9.1",
     "zod": "^4.6.7"
