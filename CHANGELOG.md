@@ -5,6 +5,12 @@ All notable changes to this project are documented here. Format based on
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-10-25
+
+### Changed
+
+- **`comment` now defaults to `false`.** Set `comment: true` to post the PR / commit comment (needs `pull-requests: write` or `contents: write`). The job summary, JSON report and outputs are always produced.
+
 ## [1.1.1] - 2026-10-25
 
 ### Fixed

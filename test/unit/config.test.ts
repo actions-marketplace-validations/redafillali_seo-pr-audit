@@ -11,7 +11,7 @@ describe('resolveConfig', () => {
       waitTimeout: 60,
       paths: ['/'],
       failOn: 'error',
-      comment: true,
+      comment: false,
       commentMode: 'update',
       links: { mode: 'internal', timeout: 10, concurrency: 8, ignore: [] },
       lighthouse: {

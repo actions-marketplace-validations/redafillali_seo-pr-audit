@@ -119340,7 +119340,7 @@ const inputSchema = object({
     'link-timeout': num.pipe(seconds).default(10),
     'link-concurrency': num.pipe(schemas_number().int().min(1).max(64)).default(8),
     'fail-on': schemas_enum(['error', 'warning', 'never']).default('error'),
-    comment: bool.default(true),
+    comment: bool.default(false),
     'comment-mode': schemas_enum(['update', 'new']).default('update'),
     'github-token': schemas_string().default(''),
 });

@@ -16,5 +16,6 @@ jobs:
 
       - uses: redafillali/seo-pr-audit@v1
         with:
+          comment: true
           base-url: ${{ steps.preview.outputs.url }}
           paths: /,/pricing

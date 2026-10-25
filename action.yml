@@ -71,9 +71,9 @@ inputs:
     required: false
     default: error
   comment:
-    description: Post / update the PR comment.
+    description: Post / update the PR (or commit) comment. Off by default; needs write permission.
     required: false
-    default: 'true'
+    default: 'false'
   comment-mode:
     description: update (single sticky comment) or new.
     required: false

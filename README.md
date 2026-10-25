@@ -1,6 +1,6 @@
 # SEO PR Audit
 
-> A GitHub Action that runs **Lighthouse** and a **basic SEO check** on every pull request, then posts the results as a single, auto-updated PR comment.
+> A GitHub Action that runs **Lighthouse** and a **basic SEO check** on every pull request, then reports the results in the job summary and, optionally, as a single auto-updated PR comment.
 
 [![CI](https://github.com/redafillali/seo-pr-audit/actions/workflows/ci.yml/badge.svg)](https://github.com/redafillali/seo-pr-audit/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -43,7 +43,7 @@ Catch SEO regressions **before** they reach production: a missing `<title>`, a d
 
 ## Pull requests and pushes
 
-The action works on both events:
+The action works on both events. Comments are **off by default**: set `comment: true` to enable them.
 
 - **`pull_request`** — posts (and updates) a single comment on the PR.
 - **`push`** — posts a comment on the pushed commit (needs `contents: write`), plus the job summary and outputs.
@@ -60,13 +60,15 @@ permissions:
   pull-requests: write
 ```
 
-Write permissions are **optional**: without `contents: write` (push) or `pull-requests: write` (PR), the comment is skipped with a notice and the job is not failed; the job summary, JSON report and outputs are still produced. Set `comment: false` to silence the notice.
+Enabling comments needs write permission: without `contents: write` (push) or `pull-requests: write` (PR), the comment is skipped with a notice and the job is not failed; the job summary, JSON report and outputs are still produced. Leave `comment` at its default (`false`) if you only want the job summary.
 
 ![Example PR comment](docs/assets/comment.png)
 
 ## Quick start
 
 ### Static site (built in the workflow)
+
+Add `comment: true` to post the report on the PR (needs `pull-requests: write`).
 
 ```yaml
 name: SEO audit
@@ -88,6 +90,7 @@ jobs:
       - uses: redafillali/seo-pr-audit@v1
         with:
           static-dir: ./dist
+          comment: true
           paths: |
             /
             /about/
@@ -137,7 +140,7 @@ jobs:
 | `link-timeout`       | `10`                  | Seconds per link request.                                                    |
 | `link-concurrency`   | `8`                   | Parallel link requests.                                                      |
 | `fail-on`            | `error`               | `error`, `warning` or `never`.                                               |
-| `comment`            | `true`                | Post / update the PR comment.                                                |
+| `comment`            | `false`               | Post / update the PR (or commit) comment.                                    |
 | `comment-mode`       | `update`              | `update` (single sticky comment) or `new`.                                   |
 | `config-file`        | `.seo-audit.yml`      | Optional config file (overrides inputs above).                               |
 | `github-token`       | `${{ github.token }}` | Token used to post the comment.                                              |

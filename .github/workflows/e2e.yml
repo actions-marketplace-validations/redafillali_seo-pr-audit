@@ -60,3 +60,4 @@ jobs:
           paths: /,/about/,/bad/,/long-title/
           fail-on: never
           lighthouse-runs: 1
+          comment: 'true'

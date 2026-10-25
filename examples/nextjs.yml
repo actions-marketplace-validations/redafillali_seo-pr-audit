@@ -16,6 +16,7 @@ jobs:
 
       - uses: redafillali/seo-pr-audit@v1
         with:
+          comment: true
           start-command: npx next start -p 3000
           base-url: http://127.0.0.1:3000
           paths: /,/pricing

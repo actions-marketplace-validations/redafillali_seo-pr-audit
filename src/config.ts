@@ -167,7 +167,7 @@ const inputSchema = z.object({
   'link-timeout': num.pipe(seconds).default(10),
   'link-concurrency': num.pipe(z.number().int().min(1).max(64)).default(8),
   'fail-on': z.enum(['error', 'warning', 'never']).default('error'),
-  comment: bool.default(true),
+  comment: bool.default(false),
   'comment-mode': z.enum(['update', 'new']).default('update'),
   'github-token': z.string().default(''),
 });
