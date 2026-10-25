@@ -1,0 +1,8 @@
+node_modules
+coverage
+.seo-audit/
+.remember/
+.repowise/
+.superpowers/
+.DS_Store
+docs/

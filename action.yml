@@ -1,0 +1,102 @@
+name: SEO PR Audit
+description: Run Lighthouse and basic SEO checks on every pull request and post one auto-updated comment.
+author: Reda El Fillali
+branding:
+  icon: search
+  color: green
+
+inputs:
+  base-url:
+    description: Base URL to audit. Required unless `static-dir` is set.
+    required: false
+  static-dir:
+    description: Directory to serve locally on a random port (e.g. ./dist).
+    required: false
+  start-command:
+    description: Command that starts your server; the action waits for `base-url` to respond.
+    required: false
+  wait-timeout:
+    description: Seconds to wait for the server to be ready.
+    required: false
+    default: '60'
+  paths:
+    description: Paths to audit (newline or comma separated).
+    required: false
+    default: /
+  lighthouse:
+    description: Run Lighthouse.
+    required: false
+    default: 'true'
+  lighthouse-preset:
+    description: mobile or desktop.
+    required: false
+    default: mobile
+  lighthouse-runs:
+    description: Number of runs per page; the median is kept.
+    required: false
+    default: '1'
+  min-performance:
+    description: Minimum Performance score (0 = report only).
+    required: false
+    default: '0'
+  min-accessibility:
+    description: Minimum Accessibility score.
+    required: false
+    default: '0'
+  min-best-practices:
+    description: Minimum Best Practices score.
+    required: false
+    default: '0'
+  min-seo:
+    description: Minimum Lighthouse SEO score.
+    required: false
+    default: '90'
+  check-links:
+    description: none, internal or all.
+    required: false
+    default: internal
+  link-ignore:
+    description: Regex patterns (one per line) of URLs to skip.
+    required: false
+  link-timeout:
+    description: Seconds per link request.
+    required: false
+    default: '10'
+  link-concurrency:
+    description: Parallel link requests.
+    required: false
+    default: '8'
+  fail-on:
+    description: error, warning or never.
+    required: false
+    default: error
+  comment:
+    description: Post / update the PR comment.
+    required: false
+    default: 'true'
+  comment-mode:
+    description: update (single sticky comment) or new.
+    required: false
+    default: update
+  config-file:
+    description: Optional config file (overrides inputs above).
+    required: false
+    default: .seo-audit.yml
+  github-token:
+    description: Token used to post the comment.
+    required: false
+    default: ${{ github.token }}
+
+outputs:
+  report-path:
+    description: Path to the full JSON report.
+  errors:
+    description: Number of errors found.
+  warnings:
+    description: Number of warnings found.
+  passed:
+    description: true if no threshold or blocking rule failed.
+
+runs:
+  using: node24
+  main: dist/index.js

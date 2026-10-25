@@ -1,0 +1,35 @@
+{
+  "name": "seo-pr-audit",
+  "version": "0.0.0",
+  "private": true,
+  "description": "GitHub Action that runs Lighthouse and basic SEO checks on every pull request.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Reda El Fillali",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "ncc build src/main.ts -o dist --source-map --license licenses.txt",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "lint": "eslint . && prettier --check .",
+    "format": "prettier --write .",
+    "all": "npm run lint && npm test && npm run build"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^22.20.5",
+    "@vercel/ncc": "^0.45.0",
+    "eslint": "^10.13.0",
+    "prettier": "^3.9.10",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.72.0",
+    "vitest": "^5.0.5"
+  },
+  "dependencies": {
+    "@actions/core": "^3.0.1",
+    "@actions/exec": "^3.0.0",
+    "@actions/github": "^9.1.1"
+  }
+}
