@@ -5,6 +5,15 @@ All notable changes to this project are documented here. Format based on
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-10-25
+
+### Security
+
+- `start-command`, `base-url` and `static-dir` are no longer accepted from `.seo-audit.yml` (the file comes from the audited repository); they only come from action inputs.
+- Page paths that resolve outside `base-url` are rejected; link redirects to non-http(s) URLs are rejected.
+- Lighthouse is installed with `npm install --ignore-scripts`.
+- Markdown control characters are escaped in report text; an existing comment is only reused when written by a bot.
+
 ## [1.0.0] - 2026-10-25
 
 ### Added
