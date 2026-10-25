@@ -10,7 +10,7 @@
     "node": ">=22"
   },
   "scripts": {
-    "build": "ncc build src/main.ts -o dist --source-map --license licenses.txt",
+    "build": "ncc build src/main.ts -o dist --source-map --license licenses.txt -e lighthouse -e chrome-launcher",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "lint": "eslint . && prettier --check .",
@@ -32,6 +32,8 @@
     "@actions/exec": "^3.0.0",
     "@actions/github": "^9.1.1",
     "cheerio": "^1.2.0",
+    "chrome-launcher": "1.2.2",
+    "lighthouse": "13.5.0",
     "p-limit": "^7.3.3",
     "sirv": "^3.0.2",
     "yaml": "^2.9.1",
