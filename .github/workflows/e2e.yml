@@ -1,0 +1,44 @@
+name: E2E
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  good:
+    name: Good fixtures pass
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./
+        with:
+          static-dir: test/fixtures/site
+          paths: /,/about/
+          fail-on: error
+          comment: 'false'
+
+  bad:
+    name: Bad fixture fails
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - id: audit
+        uses: ./
+        continue-on-error: true
+        with:
+          static-dir: test/fixtures/site
+          paths: /bad/
+          fail-on: error
+          lighthouse: 'false'
+          comment: 'false'
+      - name: Verify the audit reported the failure
+        env:
+          PASSED: ${{ steps.audit.outputs.passed }}
+          ERRORS: ${{ steps.audit.outputs.errors }}
+        run: |
+          echo "passed=$PASSED errors=$ERRORS"
+          test "$PASSED" = "false"
+          test "$ERRORS" -gt 0

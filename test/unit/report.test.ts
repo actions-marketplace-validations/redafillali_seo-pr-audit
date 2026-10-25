@@ -2,7 +2,12 @@ import { mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
-import { postComment, pullRequestNumber, type CommentApi } from '../../src/github/comment.js';
+import {
+  commentTarget,
+  postComment,
+  pullRequestNumber,
+  type CommentApi,
+} from '../../src/github/comment.js';
 import { buildReport, summarize } from '../../src/report/aggregate.js';
 import { COMMENT_MARKER, esc, renderMarkdown, runUrl } from '../../src/report/markdown.js';
 import type { PageResult } from '../../src/report/types.js';
@@ -131,7 +136,8 @@ describe('markdown snapshots', () => {
 });
 
 describe('postComment', () => {
-  const api = (existing: { id: number; body: string }[] = []) => {
+  const bot = { type: 'Bot' };
+  const api = (existing: { id: number; body: string; user?: { type: string } }[] = []) => {
     const a = {
       list: vi.fn(async () => existing),
       create: vi.fn(async () => undefined),
@@ -148,11 +154,16 @@ describe('postComment', () => {
   it('updates the marker comment in place', async () => {
     const a = api([
       { id: 1, body: 'x' },
-      { id: 7, body: `${COMMENT_MARKER}\nold` },
+      { id: 7, body: `${COMMENT_MARKER}\nold`, user: bot },
     ]);
     expect(await postComment(a, 'new', 'update')).toBe('updated');
     expect(a.update).toHaveBeenCalledWith(7, 'new');
     expect(a.create).not.toHaveBeenCalled();
+  });
+  it('ignores marker comments written by humans (no hijack)', async () => {
+    const a = api([{ id: 9, body: COMMENT_MARKER, user: { type: 'User' } }]);
+    expect(await postComment(a, 'b', 'update')).toBe('created');
+    expect(a.update).not.toHaveBeenCalled();
   });
   it('new mode always creates', async () => {
     const a = api([{ id: 7, body: COMMENT_MARKER }]);
@@ -170,6 +181,18 @@ describe('postComment', () => {
     const a = api();
     a.create.mockRejectedValue(Object.assign(new Error('boom'), { status: 500 }));
     await expect(postComment(a, 'b', 'update')).rejects.toThrow('boom');
+  });
+});
+
+describe('commentTarget', () => {
+  it('PR on pull_request, commit on push, nothing else', () => {
+    expect(commentTarget('pull_request', { pull_request: { number: 5 } }, 'abc')).toEqual({
+      kind: 'pr',
+      number: 5,
+    });
+    expect(commentTarget('push', {}, 'abc')).toEqual({ kind: 'commit', sha: 'abc' });
+    expect(commentTarget('schedule', {}, 'abc')).toBeUndefined();
+    expect(commentTarget('push', {}, '')).toBeUndefined();
   });
 });
 

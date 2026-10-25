@@ -1,0 +1,20 @@
+name: SEO audit (preview deployment)
+on: pull_request
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  seo:
+    runs-on: ubuntu-latest
+    steps:
+      # Replace with the step of your host (Vercel, Netlify, Cloudflare Pages…)
+      # that exposes the preview URL as an output.
+      - id: preview
+        run: echo "url=https://my-preview.example.com" >> "$GITHUB_OUTPUT"
+
+      - uses: redafillali/seo-pr-audit@v1
+        with:
+          base-url: ${{ steps.preview.outputs.url }}
+          paths: /,/pricing

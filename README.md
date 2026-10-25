@@ -41,6 +41,27 @@ Catch SEO regressions **before** they reach production: a missing `<title>`, a d
 </details>
 ```
 
+## Pull requests and pushes
+
+The action works on both events:
+
+- **`pull_request`** — posts (and updates) a single comment on the PR.
+- **`push`** — posts a comment on the pushed commit (needs `contents: write`), plus the job summary and outputs.
+- **Any other event** — no comment; the job summary, JSON report and outputs are still produced.
+
+```yaml
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write # commit comments on push
+  pull-requests: write
+```
+
+Set `comment: false` to only use the job summary.
+
 ## Quick start
 
 ### Static site (built in the workflow)

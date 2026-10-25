@@ -3,7 +3,12 @@ import * as core from '@actions/core';
 import * as github from '@actions/github';
 import { runAudit } from './audit.js';
 import { ConfigError, INPUT_NAMES, resolveConfig } from './config.js';
-import { octokitCommentApi, postComment, pullRequestNumber } from './github/comment.js';
+import {
+  commentTarget,
+  octokitCommentApi,
+  octokitCommitCommentApi,
+  postComment,
+} from './github/comment.js';
 import { renderMarkdown } from './report/markdown.js';
 import { writeJobSummary, writeJsonReport } from './report/write.js';
 import { startCommand, type CommandTarget } from './target/command-server.js';
@@ -32,17 +37,24 @@ async function startTarget(config: ReturnType<typeof resolveConfig>): Promise<Ta
 
 async function publish(config: ReturnType<typeof resolveConfig>, markdown: string): Promise<void> {
   if (!config.comment) return;
-  const pr = pullRequestNumber(github.context.payload);
-  if (pr === undefined) {
-    core.info('Not a pull_request event: skipping the PR comment.');
+  const { eventName, payload, sha, repo } = github.context;
+  const target = commentTarget(eventName, payload, sha);
+  if (!target) {
+    core.info(`Event "${eventName}" is neither pull_request nor push: skipping the comment.`);
     return;
   }
   if (!config.githubToken) {
-    core.warning('No github-token: skipping the PR comment.');
+    core.warning('No github-token: skipping the comment.');
     return;
   }
-  const api = octokitCommentApi(github.getOctokit(config.githubToken), github.context.repo, pr);
-  core.info(`PR comment ${await postComment(api, markdown, config.commentMode)}.`);
+  const octokit = github.getOctokit(config.githubToken);
+  const api =
+    target.kind === 'pr'
+      ? octokitCommentApi(octokit, repo, target.number)
+      : octokitCommitCommentApi(octokit, repo, target.sha);
+  core.info(
+    `${target.kind === 'pr' ? 'PR' : 'Commit'} comment ${await postComment(api, markdown, config.commentMode)}.`,
+  );
 }
 
 async function run(): Promise<void> {

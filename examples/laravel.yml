@@ -1,0 +1,25 @@
+name: SEO audit
+on: pull_request
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  seo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with: { php-version: '8.3' }
+      - run: composer install --no-interaction --prefer-dist
+      - run: cp .env.example .env && php artisan key:generate
+
+      - uses: redafillali/seo-pr-audit@v1
+        with:
+          start-command: php artisan serve --port=8000
+          base-url: http://127.0.0.1:8000
+          wait-timeout: 60
+          paths: |
+            /
+            /contact

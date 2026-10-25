@@ -119445,6 +119445,27 @@ function renderMarkdown(report, { maxLength = COMMENT_LIMIT, link = runUrl() } =
 function pullRequestNumber(payload) {
     return payload.pull_request?.number;
 }
+/** PR comment on `pull_request` events, commit comment on `push`, nothing otherwise. */
+function commentTarget(eventName, payload, sha) {
+    const pr = pullRequestNumber(payload);
+    if (pr !== undefined)
+        return { kind: 'pr', number: pr };
+    if (eventName === 'push' && sha)
+        return { kind: 'commit', sha };
+    return undefined;
+}
+/** Octokit → CommentApi for a commit (push events). */
+function octokitCommitCommentApi(octokit, repo, commit_sha) {
+    return {
+        list: () => octokit.paginate(octokit.rest.repos.listCommentsForCommit, {
+            ...repo,
+            commit_sha,
+            per_page: 100,
+        }),
+        create: async (body) => void (await octokit.rest.repos.createCommitComment({ ...repo, commit_sha, body })),
+        update: async (comment_id, body) => void (await octokit.rest.repos.updateCommitComment({ ...repo, comment_id, body })),
+    };
+}
 /** Octokit → CommentApi for one issue/PR. */
 function octokitCommentApi(octokit, repo, issue_number) {
     return {
@@ -119460,7 +119481,9 @@ function octokitCommentApi(octokit, repo, issue_number) {
 async function postComment(api, body, mode, marker = COMMENT_MARKER) {
     try {
         if (mode === 'update') {
-            const existing = (await api.list()).find((c) => c.body?.includes(marker));
+            // Only trust comments written by a bot (the action itself), so a contributor pasting the
+            // marker in their own comment cannot hijack the report.
+            const existing = (await api.list()).find((c) => c.user?.type === 'Bot' && c.body?.includes(marker));
             if (existing) {
                 await api.update(existing.id, body);
                 return 'updated';
@@ -120344,17 +120367,21 @@ async function startTarget(config) {
 async function publish(config, markdown) {
     if (!config.comment)
         return;
-    const pr = pullRequestNumber(github_context.payload);
-    if (pr === undefined) {
-        info('Not a pull_request event: skipping the PR comment.');
+    const { eventName, payload, sha, repo } = github_context;
+    const target = commentTarget(eventName, payload, sha);
+    if (!target) {
+        info(`Event "${eventName}" is neither pull_request nor push: skipping the comment.`);
         return;
     }
     if (!config.githubToken) {
-        warning('No github-token: skipping the PR comment.');
+        warning('No github-token: skipping the comment.');
         return;
     }
-    const api = octokitCommentApi(getOctokit(config.githubToken), github_context.repo, pr);
-    info(`PR comment ${await postComment(api, markdown, config.commentMode)}.`);
+    const octokit = getOctokit(config.githubToken);
+    const api = target.kind === 'pr'
+        ? octokitCommentApi(octokit, repo, target.number)
+        : octokitCommitCommentApi(octokit, repo, target.sha);
+    info(`${target.kind === 'pr' ? 'PR' : 'Commit'} comment ${await postComment(api, markdown, config.commentMode)}.`);
 }
 async function run() {
     const inputs = Object.fromEntries(INPUT_NAMES.map((n) => [n, getInput(n)]));

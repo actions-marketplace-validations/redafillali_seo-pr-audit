@@ -3,7 +3,7 @@ import type { Config } from '../config.js';
 import { COMMENT_MARKER } from '../report/markdown.js';
 
 export interface CommentApi {
-  list(): Promise<{ id: number; body?: string | null }[]>;
+  list(): Promise<{ id: number; body?: string | null; user?: { type?: string } | null }[]>;
   create(body: string): Promise<void>;
   update(id: number, body: string): Promise<void>;
 }
@@ -15,6 +15,40 @@ export function pullRequestNumber(payload: {
   pull_request?: { number?: number };
 }): number | undefined {
   return payload.pull_request?.number;
+}
+
+export type CommentTarget = { kind: 'pr'; number: number } | { kind: 'commit'; sha: string };
+
+/** PR comment on `pull_request` events, commit comment on `push`, nothing otherwise. */
+export function commentTarget(
+  eventName: string,
+  payload: { pull_request?: { number?: number } },
+  sha: string,
+): CommentTarget | undefined {
+  const pr = pullRequestNumber(payload);
+  if (pr !== undefined) return { kind: 'pr', number: pr };
+  if (eventName === 'push' && sha) return { kind: 'commit', sha };
+  return undefined;
+}
+
+/** Octokit → CommentApi for a commit (push events). */
+export function octokitCommitCommentApi(
+  octokit: ReturnType<typeof import('@actions/github').getOctokit>,
+  repo: { owner: string; repo: string },
+  commit_sha: string,
+): CommentApi {
+  return {
+    list: () =>
+      octokit.paginate(octokit.rest.repos.listCommentsForCommit, {
+        ...repo,
+        commit_sha,
+        per_page: 100,
+      }),
+    create: async (body) =>
+      void (await octokit.rest.repos.createCommitComment({ ...repo, commit_sha, body })),
+    update: async (comment_id, body) =>
+      void (await octokit.rest.repos.updateCommitComment({ ...repo, comment_id, body })),
+  };
 }
 
 /** Octokit → CommentApi for one issue/PR. */
@@ -45,7 +79,11 @@ export async function postComment(
 ): Promise<CommentResult> {
   try {
     if (mode === 'update') {
-      const existing = (await api.list()).find((c) => c.body?.includes(marker));
+      // Only trust comments written by a bot (the action itself), so a contributor pasting the
+      // marker in their own comment cannot hijack the report.
+      const existing = (await api.list()).find(
+        (c) => c.user?.type === 'Bot' && c.body?.includes(marker),
+      );
       if (existing) {
         await api.update(existing.id, body);
         return 'updated';
