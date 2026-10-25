@@ -26,11 +26,15 @@ async function crawl(baseUrl: string, prefix: string, maxPages: number): Promise
   const queue = [prefix];
   for (let i = 0; i < queue.length && pages.length < maxPages; i++) {
     let page;
-    try {
-      page = await fetchPage(baseUrl, queue[i]!);
-    } catch {
-      continue;
+    // One retry: a dropped keep-alive connection must not silently hide a whole branch of the site.
+    for (let attempt = 0; attempt < 2 && !page; attempt++) {
+      try {
+        page = await fetchPage(baseUrl, queue[i]!);
+      } catch {
+        /* retry, then give up on this page (the audit reports it as page-unreachable if listed) */
+      }
     }
+    if (!page) continue;
     const isHtml = (page.headers['content-type'] ?? '').includes('html');
     if (queue[i] !== prefix) {
       if (page.status < 200 || page.status >= 300 || !isHtml) continue; // not an auditable page
