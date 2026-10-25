@@ -178,6 +178,19 @@ describe('postComment', () => {
     );
     expect(await postComment(a, 'b', 'update')).toBe('skipped');
   });
+  it('403 notice names the missing permission per event', async () => {
+    const out = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    for (const [kind, perm] of [
+      ['commit', 'contents: write'],
+      ['pr', 'pull-requests: write'],
+    ] as const) {
+      const a = api();
+      a.create.mockRejectedValue(Object.assign(new Error('x'), { status: 403 }));
+      await postComment(a, 'b', 'update', COMMENT_MARKER, kind);
+      expect(String(out.mock.calls.at(-1)?.[0])).toContain(perm);
+    }
+    out.mockRestore();
+  });
   it('other errors propagate', async () => {
     const a = api();
     a.create.mockRejectedValue(Object.assign(new Error('boom'), { status: 500 }));

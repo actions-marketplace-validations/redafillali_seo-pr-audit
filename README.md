@@ -60,7 +60,7 @@ permissions:
   pull-requests: write
 ```
 
-Set `comment: false` to only use the job summary.
+Write permissions are **optional**: without `contents: write` (push) or `pull-requests: write` (PR), the comment is skipped with a notice and the job is not failed; the job summary, JSON report and outputs are still produced. Set `comment: false` to silence the notice.
 
 ![Example PR comment](docs/assets/comment.png)
 

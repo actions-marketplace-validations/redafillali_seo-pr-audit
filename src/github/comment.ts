@@ -69,13 +69,14 @@ export function octokitCommentApi(
 
 /**
  * `update` mode edits the comment carrying the marker (or creates it); `new` always creates.
- * A 403 (read-only fork token) only produces a warning.
+ * A 403 (read-only token) skips the comment with a notice; it never fails the job.
  */
 export async function postComment(
   api: CommentApi,
   body: string,
   mode: Config['commentMode'],
   marker = COMMENT_MARKER,
+  kind: CommentTarget['kind'] = 'pr',
 ): Promise<CommentResult> {
   try {
     if (mode === 'update') {
@@ -93,8 +94,11 @@ export async function postComment(
     return 'created';
   } catch (e) {
     if ((e as { status?: number }).status === 403) {
-      core.warning(
-        'Could not post the PR comment: the token is read-only (fork PR?). The report is in the job summary; see docs/forks.md.',
+      // Commenting is optional: a read-only token is a normal setup, so this is a notice, not a warning.
+      core.notice(
+        kind === 'commit'
+          ? 'Commit comment skipped (no write permission): the token needs `contents: write`. Add it to the workflow `permissions`, or set `comment: false`. The report is in the job summary.'
+          : 'PR comment skipped (no write permission): the token needs `pull-requests: write`, or this is a fork PR (read-only token; see docs/forks.md). The report is in the job summary.',
       );
       return 'skipped';
     }

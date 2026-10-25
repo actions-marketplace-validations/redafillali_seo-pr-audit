@@ -5,6 +5,12 @@ All notable changes to this project are documented here. Format based on
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-10-25
+
+### Fixed
+
+- Commenting is optional: without write permission the comment is skipped with a notice (not a warning) naming the missing permission (`contents: write` on push, `pull-requests: write` on PR).
+
 ## [1.1.0] - 2026-10-25
 
 ### Added

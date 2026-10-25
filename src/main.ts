@@ -53,7 +53,7 @@ async function publish(config: ReturnType<typeof resolveConfig>, markdown: strin
       ? octokitCommentApi(octokit, repo, target.number)
       : octokitCommitCommentApi(octokit, repo, target.sha);
   core.info(
-    `${target.kind === 'pr' ? 'PR' : 'Commit'} comment ${await postComment(api, markdown, config.commentMode)}.`,
+    `${target.kind === 'pr' ? 'PR' : 'Commit'} comment ${await postComment(api, markdown, config.commentMode, undefined, target.kind)}.`,
   );
 }
 

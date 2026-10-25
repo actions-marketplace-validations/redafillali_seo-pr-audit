@@ -80960,7 +80960,7 @@ function utils_toCommandValue(input) {
  * @returns The command properties to send with the actual annotation command
  * See IssueCommandProperties: https://github.com/actions/runner/blob/main/src/Runner.Worker/ActionCommandManager.cs#L646
  */
-function utils_toCommandProperties(annotationProperties) {
+function toCommandProperties(annotationProperties) {
     if (!Object.keys(annotationProperties).length) {
         return {};
     }
@@ -83771,7 +83771,7 @@ function core_debug(message) {
  * @param properties optional properties to add to the annotation.
  */
 function error(message, properties = {}) {
-    command_issueCommand('error', utils_toCommandProperties(properties), message instanceof Error ? message.toString() : message);
+    command_issueCommand('error', toCommandProperties(properties), message instanceof Error ? message.toString() : message);
 }
 /**
  * Adds a warning issue
@@ -83779,7 +83779,7 @@ function error(message, properties = {}) {
  * @param properties optional properties to add to the annotation.
  */
 function warning(message, properties = {}) {
-    command_issueCommand('warning', utils_toCommandProperties(properties), message instanceof Error ? message.toString() : message);
+    command_issueCommand('warning', toCommandProperties(properties), message instanceof Error ? message.toString() : message);
 }
 /**
  * Adds a notice issue
@@ -83787,7 +83787,7 @@ function warning(message, properties = {}) {
  * @param properties optional properties to add to the annotation.
  */
 function notice(message, properties = {}) {
-    issueCommand('notice', toCommandProperties(properties), message instanceof Error ? message.toString() : message);
+    command_issueCommand('notice', toCommandProperties(properties), message instanceof Error ? message.toString() : message);
 }
 /**
  * Writes info to log with console.log.
@@ -119548,9 +119548,9 @@ function octokitCommentApi(octokit, repo, issue_number) {
 }
 /**
  * `update` mode edits the comment carrying the marker (or creates it); `new` always creates.
- * A 403 (read-only fork token) only produces a warning.
+ * A 403 (read-only token) skips the comment with a notice; it never fails the job.
  */
-async function postComment(api, body, mode, marker = COMMENT_MARKER) {
+async function postComment(api, body, mode, marker = COMMENT_MARKER, kind = 'pr') {
     try {
         if (mode === 'update') {
             // Only trust comments written by a bot (the action itself), so a contributor pasting the
@@ -119566,7 +119566,10 @@ async function postComment(api, body, mode, marker = COMMENT_MARKER) {
     }
     catch (e) {
         if (e.status === 403) {
-            warning('Could not post the PR comment: the token is read-only (fork PR?). The report is in the job summary; see docs/forks.md.');
+            // Commenting is optional: a read-only token is a normal setup, so this is a notice, not a warning.
+            notice(kind === 'commit'
+                ? 'Commit comment skipped (no write permission): the token needs `contents: write`. Add it to the workflow `permissions`, or set `comment: false`. The report is in the job summary.'
+                : 'PR comment skipped (no write permission): the token needs `pull-requests: write`, or this is a fork PR (read-only token; see docs/forks.md). The report is in the job summary.');
             return 'skipped';
         }
         throw e;
@@ -120453,7 +120456,7 @@ async function publish(config, markdown) {
     const api = target.kind === 'pr'
         ? octokitCommentApi(octokit, repo, target.number)
         : octokitCommitCommentApi(octokit, repo, target.sha);
-    info(`${target.kind === 'pr' ? 'PR' : 'Commit'} comment ${await postComment(api, markdown, config.commentMode)}.`);
+    info(`${target.kind === 'pr' ? 'PR' : 'Commit'} comment ${await postComment(api, markdown, config.commentMode, undefined, target.kind)}.`);
 }
 async function run() {
     const inputs = Object.fromEntries(INPUT_NAMES.map((n) => [n, getInput(n)]));
