@@ -39,6 +39,7 @@ export async function loadLighthouse(
         '--no-audit',
         '--no-fund',
         '--no-save',
+        '--ignore-scripts',
         '--loglevel=error',
         `lighthouse@${LIGHTHOUSE_VERSION}`,
         `chrome-launcher@${CHROME_LAUNCHER_VERSION}`,

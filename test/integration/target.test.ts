@@ -35,6 +35,10 @@ describe('static server + fetchPage', () => {
     expect(page.headers['content-type']).toContain('text/html');
   });
 
+  it('refuses paths that leave the base URL', async () => {
+    await expect(fetchPage(target.baseUrl, '//evil.example/x')).rejects.toThrow(/outside base-url/);
+  });
+
   it('times out on a hanging server', async () => {
     const hang = createServer(() => {});
     await new Promise<void>((ok) => hang.listen(0, '127.0.0.1', ok));

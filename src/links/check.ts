@@ -50,6 +50,8 @@ async function probe(start: string, timeoutMs: number): Promise<LinkResult> {
         if (++redirects > MAX_REDIRECTS)
           return { url: start, error: 'too many redirects', redirects };
         url = new URL(location, url).toString();
+        if (!/^https?:/.test(url))
+          return { url: start, error: 'redirect to non-http URL', redirects };
         continue;
       }
       return { url: start, status: res.status, redirects };

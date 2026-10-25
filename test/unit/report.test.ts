@@ -122,6 +122,7 @@ describe('markdown snapshots', () => {
     expect(md).not.toContain('<img');
     expect(md).not.toContain('@octocat');
     expect(esc('a|b')).toBe('a\\|b');
+    expect(esc('[x](http://evil) ![i](u)')).toBe('\\[x\\]\\(http://evil\\) \\!\\[i\\]\\(u\\)');
   });
   it('builds the run URL from the environment', () => {
     expect(

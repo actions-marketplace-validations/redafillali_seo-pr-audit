@@ -8,6 +8,8 @@ export const COMMENT_LIMIT = 65_000;
 /** Neutralise HTML, table pipes, backticks and @mentions in text that may come from page content. */
 export function esc(s: string): string {
   return s
+    .replace(/\\/g, '\\\\')
+    .replace(/[[\]()!*_~#]/g, (c) => `\\${c}`)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')

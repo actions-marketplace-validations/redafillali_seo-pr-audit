@@ -82,9 +82,6 @@ const rule = z.union([
 
 const fileSchema = z
   .object({
-    'base-url': z.string(),
-    'static-dir': z.string(),
-    'start-command': z.string(),
     'wait-timeout': seconds,
     paths: list,
     'fail-on': z.enum(['error', 'warning', 'never']),
@@ -181,7 +178,7 @@ export function normalizePath(p: string): string {
 
 /**
  * Build a validated Config from raw action inputs (empty string = unset) and the
- * optional text of the config file. File values override inputs.
+ * optional text of the config file. File values override inputs, except `base-url`, `static-dir` and `start-command`, which only come from action inputs (the file lives in the repo under audit and may be changed by a PR).
  */
 export function resolveConfig(inputs: Record<string, string>, fileText?: string): Config {
   const cleaned = Object.fromEntries(
@@ -209,9 +206,9 @@ export function resolveConfig(inputs: Record<string, string>, fileText?: string)
 
   const th = f.lighthouse?.thresholds ?? {};
   const config: Config = {
-    baseUrl: f['base-url'] ?? i['base-url'],
-    staticDir: f['static-dir'] ?? i['static-dir'],
-    startCommand: f['start-command'] ?? i['start-command'],
+    baseUrl: i['base-url'],
+    staticDir: i['static-dir'],
+    startCommand: i['start-command'],
     waitTimeout: f['wait-timeout'] ?? i['wait-timeout'],
     paths: [...new Set(splitList(f.paths ?? i.paths).map(normalizePath))],
     lighthouse: {

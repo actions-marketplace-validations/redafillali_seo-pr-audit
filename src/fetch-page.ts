@@ -14,6 +14,8 @@ export async function fetchPage(
   timeoutMs = 30_000,
 ): Promise<FetchedPage> {
   const url = new URL(path, baseUrl).toString();
+  if (new URL(url).origin !== new URL(baseUrl).origin)
+    throw new Error(`path ${path} resolves outside base-url`);
   const res = await fetch(url, {
     redirect: 'follow',
     signal: AbortSignal.timeout(timeoutMs),

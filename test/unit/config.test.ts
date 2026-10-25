@@ -53,6 +53,11 @@ links: { mode: all, ignore: ["^https://twitter\\\\.com"] }
     expect(c.links.ignore[0]!.test('https://twitter.com/x')).toBe(true);
   });
 
+  it('rejects target keys in the config file (command-injection guard)', () => {
+    for (const k of ['start-command: x', 'base-url: http://x', 'static-dir: d'])
+      expect(() => resolveConfig(base, k)).toThrow(/Invalid config file/);
+  });
+
   it('treats an empty config file as no overrides', () => {
     expect(resolveConfig(base, '').paths).toEqual(['/']);
     expect(resolveConfig(base, '# nothing\n').paths).toEqual(['/']);

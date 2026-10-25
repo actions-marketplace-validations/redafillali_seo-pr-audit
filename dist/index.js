@@ -108763,6 +108763,8 @@ async function fromURL(url, options = {}) {
 /** GET a page (following redirects). Throws on network error or timeout. */
 async function fetchPage(baseUrl, path, timeoutMs = 30_000) {
     const url = new URL(path, baseUrl).toString();
+    if (new URL(url).origin !== new URL(baseUrl).origin)
+        throw new Error(`path ${path} resolves outside base-url`);
     const res = await fetch(url, {
         redirect: 'follow',
         signal: AbortSignal.timeout(timeoutMs),
@@ -109056,6 +109058,8 @@ async function probe(start, timeoutMs) {
                 if (++redirects > MAX_REDIRECTS)
                     return { url: start, error: 'too many redirects', redirects };
                 url = new URL(location, url).toString();
+                if (!/^https?:/.test(url))
+                    return { url: start, error: 'redirect to non-http URL', redirects };
                 continue;
             }
             return { url: start, status: res.status, redirects };
@@ -109187,6 +109191,7 @@ async function loadLighthouse(dir = (0,external_node_path_.join)(process.env.RUN
             '--no-audit',
             '--no-fund',
             '--no-save',
+            '--ignore-scripts',
             '--loglevel=error',
             `lighthouse@${LIGHTHOUSE_VERSION}`,
             `chrome-launcher@${CHROME_LAUNCHER_VERSION}`,
@@ -119188,9 +119193,6 @@ const rule = union([
         .strict(),
 ]);
 const fileSchema = object({
-    'base-url': schemas_string(),
-    'static-dir': schemas_string(),
-    'start-command': schemas_string(),
     'wait-timeout': seconds,
     paths: config_list,
     'fail-on': schemas_enum(['error', 'warning', 'never']),
@@ -119279,7 +119281,7 @@ function normalizePath(p) {
 }
 /**
  * Build a validated Config from raw action inputs (empty string = unset) and the
- * optional text of the config file. File values override inputs.
+ * optional text of the config file. File values override inputs, except `base-url`, `static-dir` and `start-command`, which only come from action inputs (the file lives in the repo under audit and may be changed by a PR).
  */
 function resolveConfig(inputs, fileText) {
     const cleaned = Object.fromEntries(Object.entries(inputs)
@@ -119304,9 +119306,9 @@ function resolveConfig(inputs, fileText) {
     });
     const th = f.lighthouse?.thresholds ?? {};
     const config = {
-        baseUrl: f['base-url'] ?? i['base-url'],
-        staticDir: f['static-dir'] ?? i['static-dir'],
-        startCommand: f['start-command'] ?? i['start-command'],
+        baseUrl: i['base-url'],
+        staticDir: i['static-dir'],
+        startCommand: i['start-command'],
         waitTimeout: f['wait-timeout'] ?? i['wait-timeout'],
         paths: [...new Set(splitList(f.paths ?? i.paths).map(normalizePath))],
         lighthouse: {
@@ -119359,6 +119361,8 @@ const COMMENT_LIMIT = 65_000;
 /** Neutralise HTML, table pipes, backticks and @mentions in text that may come from page content. */
 function markdown_esc(s) {
     return s
+        .replace(/\\/g, '\\\\')
+        .replace(/[[\]()!*_~#]/g, (c) => `\\${c}`)
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')

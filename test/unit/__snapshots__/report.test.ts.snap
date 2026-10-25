@@ -30,7 +30,7 @@ exports[`markdown snapshots > report with errors 1`] = `
 - ❌ **meta-description** — missing &lt;meta name="description"&gt;
 - ❌ **broken-links** — 1 broken link
   - \`http://x/blog/old-post → 404\`
-- ⚠️ **title** — 72 characters (recommended ≤ 60)
+- ⚠️ **title** — 72 characters \\(recommended ≤ 60\\)
 
 </details>
 
@@ -104,7 +104,7 @@ exports[`markdown snapshots > without lighthouse 1`] = `
 - ❌ **meta-description** — missing &lt;meta name="description"&gt;
 - ❌ **broken-links** — 1 broken link
   - \`http://x/blog/old-post → 404\`
-- ⚠️ **title** — 72 characters (recommended ≤ 60)
+- ⚠️ **title** — 72 characters \\(recommended ≤ 60\\)
 
 </details>
 
