@@ -19,8 +19,12 @@ inputs:
     description: Seconds to wait for the server to be ready.
     required: false
     default: '60'
+  max-pages:
+    description: Maximum number of pages audited (caps wildcard crawling such as /blog/*).
+    required: false
+    default: '50'
   paths:
-    description: Paths to audit (newline or comma separated).
+    description: Paths to audit (newline or comma separated). A trailing * (e.g. /blog/*) also audits every page found under that path.
     required: false
     default: /
   lighthouse:

@@ -108779,6 +108779,99 @@ async function fetchPage(baseUrl, path, timeoutMs = 30_000) {
     };
 }
 
+;// CONCATENATED MODULE: ./src/links/extract.ts
+
+const SKIPPED = /^\s*(#|mailto:|tel:|javascript:)/i;
+/** a[href] → absolute http(s) URLs, resolved against <base href> / finalUrl, without fragment, deduplicated. */
+function extractLinks(html, finalUrl) {
+    const $ = load_parse_load(html);
+    let base = finalUrl;
+    const baseHref = $('base[href]').first().attr('href');
+    if (baseHref) {
+        try {
+            base = new URL(baseHref, finalUrl).toString();
+        }
+        catch {
+            /* invalid <base>: keep finalUrl */
+        }
+    }
+    const out = new Set();
+    $('a[href]').each((_, el) => {
+        const href = $(el).attr('href');
+        if (SKIPPED.test(href))
+            return;
+        try {
+            const u = new URL(href.trim(), base);
+            if (u.protocol !== 'http:' && u.protocol !== 'https:')
+                return;
+            u.hash = '';
+            out.add(u.toString());
+        }
+        catch {
+            /* unparsable href: not a checkable link */
+        }
+    });
+    return [...out];
+}
+/** Apply `check-links` mode (none/internal/all) and `link-ignore` patterns. */
+function filterLinks(urls, opts) {
+    if (opts.mode === 'none')
+        return [];
+    return urls.filter((u) => (opts.mode === 'all' || new URL(u).origin === opts.origin) &&
+        !opts.ignore.some((re) => re.test(u)));
+}
+
+;// CONCATENATED MODULE: ./src/discover.ts
+
+
+/**
+ * Expand wildcard paths: `/blog/*` → `/blog/` plus every page under `/blog/` reachable by following
+ * links (breadth-first, same origin, HTML only); `/*` crawls the whole site. Plain paths are kept as is.
+ * The result is deduplicated and capped at `maxPages`.
+ */
+async function expandPaths(baseUrl, paths, maxPages) {
+    const out = new Set();
+    for (const p of paths) {
+        if (!p.endsWith('*'))
+            out.add(p);
+        else
+            for (const found of await crawl(baseUrl, p.slice(0, -1), maxPages))
+                out.add(found);
+    }
+    return [...out].slice(0, maxPages);
+}
+async function crawl(baseUrl, prefix, maxPages) {
+    const origin = new URL(baseUrl).origin;
+    const seen = new Set([prefix]);
+    const pages = [prefix]; // the start page is always kept, so a 404 is reported by the audit
+    const queue = [prefix];
+    for (let i = 0; i < queue.length && pages.length < maxPages; i++) {
+        let page;
+        try {
+            page = await fetchPage(baseUrl, queue[i]);
+        }
+        catch {
+            continue;
+        }
+        const isHtml = (page.headers['content-type'] ?? '').includes('html');
+        if (queue[i] !== prefix) {
+            if (page.status < 200 || page.status >= 300 || !isHtml)
+                continue; // not an auditable page
+            pages.push(queue[i]);
+        }
+        if (!isHtml || page.status < 200 || page.status >= 300)
+            continue;
+        for (const link of extractLinks(page.html, page.finalUrl)) {
+            const u = new URL(link);
+            if (u.origin !== origin || !u.pathname.startsWith(prefix) || seen.has(u.pathname))
+                continue;
+            seen.add(u.pathname);
+            queue.push(u.pathname);
+        }
+    }
+    return pages.slice(0, maxPages);
+}
+
 ;// CONCATENATED MODULE: ./node_modules/yocto-queue/index.js
 /*
 How it works:
@@ -109112,48 +109205,6 @@ function linkFindings(results) {
 /** Check all `urls` of one page and return its findings. */
 async function checkPageLinks(checker, urls) {
     return linkFindings(await Promise.all(urls.map((u) => checker.check(u))));
-}
-
-;// CONCATENATED MODULE: ./src/links/extract.ts
-
-const SKIPPED = /^\s*(#|mailto:|tel:|javascript:)/i;
-/** a[href] → absolute http(s) URLs, resolved against <base href> / finalUrl, without fragment, deduplicated. */
-function extractLinks(html, finalUrl) {
-    const $ = load_parse_load(html);
-    let base = finalUrl;
-    const baseHref = $('base[href]').first().attr('href');
-    if (baseHref) {
-        try {
-            base = new URL(baseHref, finalUrl).toString();
-        }
-        catch {
-            /* invalid <base>: keep finalUrl */
-        }
-    }
-    const out = new Set();
-    $('a[href]').each((_, el) => {
-        const href = $(el).attr('href');
-        if (SKIPPED.test(href))
-            return;
-        try {
-            const u = new URL(href.trim(), base);
-            if (u.protocol !== 'http:' && u.protocol !== 'https:')
-                return;
-            u.hash = '';
-            out.add(u.toString());
-        }
-        catch {
-            /* unparsable href: not a checkable link */
-        }
-    });
-    return [...out];
-}
-/** Apply `check-links` mode (none/internal/all) and `link-ignore` patterns. */
-function filterLinks(urls, opts) {
-    if (opts.mode === 'none')
-        return [];
-    return urls.filter((u) => (opts.mode === 'all' || new URL(u).origin === opts.origin) &&
-        !opts.ignore.some((re) => re.test(u)));
 }
 
 // EXTERNAL MODULE: external "node:fs/promises"
@@ -109566,6 +109617,7 @@ async function canonicalTargetFindings(html, pageUrl, baseUrl, config) {
 
 
 
+
 const timed = async (label, fn) => group(label, async () => {
     const t0 = Date.now();
     try {
@@ -109632,7 +109684,9 @@ async function runAudit(baseUrl, config) {
         timeoutMs: config.links.timeout * 1000,
         concurrency: config.links.concurrency,
     });
-    const audited = await timed('SEO rules and links', () => Promise.all(config.paths.map((p) => auditPage(baseUrl, p, config, checker))));
+    const paths = await timed('Discover pages', () => expandPaths(baseUrl, config.paths, config.maxPages));
+    info(`${paths.length} page(s) to audit`);
+    const audited = await timed('SEO rules and links', () => Promise.all(paths.map((p) => auditPage(baseUrl, p, config, checker))));
     const pages = audited.map((a) => a.result);
     const dupes = findDuplicateTitles(audited.flatMap((a) => (a.$ ? [{ path: a.result.path, $: a.$ }] : [])), config);
     for (const p of pages)
@@ -119228,6 +119282,7 @@ const INPUT_NAMES = [
     'static-dir',
     'start-command',
     'wait-timeout',
+    'max-pages',
     'paths',
     'lighthouse',
     'lighthouse-preset',
@@ -119327,6 +119382,7 @@ const inputSchema = object({
     'static-dir': schemas_string().optional(),
     'start-command': schemas_string().optional(),
     'wait-timeout': num.pipe(seconds).default(60),
+    'max-pages': num.pipe(schemas_number().int().min(1).max(500)).default(50),
     paths: schemas_string().default('/'),
     lighthouse: bool.default(true),
     'lighthouse-preset': schemas_enum(['mobile', 'desktop']).default('mobile'),
@@ -119378,6 +119434,7 @@ function resolveConfig(inputs, fileText) {
         staticDir: i['static-dir'],
         startCommand: i['start-command'],
         waitTimeout: f['wait-timeout'] ?? i['wait-timeout'],
+        maxPages: i['max-pages'],
         paths: [...new Set(splitList(f.paths ?? i.paths).map(normalizePath))],
         lighthouse: {
             enabled: f.lighthouse?.enabled ?? i.lighthouse,

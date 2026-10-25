@@ -1,6 +1,7 @@
 import * as cheerio from 'cheerio';
 import * as core from '@actions/core';
 import type { Config } from './config.js';
+import { expandPaths } from './discover.js';
 import { fetchPage } from './fetch-page.js';
 import { checkPageLinks, createLinkChecker } from './links/check.js';
 import { extractLinks, filterLinks } from './links/extract.js';
@@ -85,8 +86,12 @@ export async function runAudit(baseUrl: string, config: Config): Promise<AuditRe
     concurrency: config.links.concurrency,
   });
 
+  const paths = await timed('Discover pages', () =>
+    expandPaths(baseUrl, config.paths, config.maxPages),
+  );
+  core.info(`${paths.length} page(s) to audit`);
   const audited = await timed('SEO rules and links', () =>
-    Promise.all(config.paths.map((p) => auditPage(baseUrl, p, config, checker))),
+    Promise.all(paths.map((p) => auditPage(baseUrl, p, config, checker))),
   );
   const pages = audited.map((a) => a.result);
 

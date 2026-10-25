@@ -121,29 +121,30 @@ jobs:
 
 ## Inputs
 
-| Input                | Default               | Description                                                                  |
-| -------------------- | --------------------- | ---------------------------------------------------------------------------- |
-| `base-url`           | —                     | Base URL to audit. Required unless `static-dir` is set.                      |
-| `static-dir`         | —                     | Directory to serve locally on a random port (e.g. `./dist`).                 |
-| `start-command`      | —                     | Command that starts your server; the action waits for `base-url` to respond. |
-| `wait-timeout`       | `60`                  | Seconds to wait for the server to be ready.                                  |
-| `paths`              | `/`                   | Paths to audit (newline or comma separated).                                 |
-| `lighthouse`         | `true`                | Run Lighthouse.                                                              |
-| `lighthouse-preset`  | `mobile`              | `mobile` or `desktop`.                                                       |
-| `lighthouse-runs`    | `1`                   | Number of runs per page; the median is kept.                                 |
-| `min-performance`    | `0`                   | Minimum Performance score (0 = report only).                                 |
-| `min-accessibility`  | `0`                   | Minimum Accessibility score.                                                 |
-| `min-best-practices` | `0`                   | Minimum Best Practices score.                                                |
-| `min-seo`            | `90`                  | Minimum Lighthouse SEO score.                                                |
-| `check-links`        | `internal`            | `none`, `internal` or `all`.                                                 |
-| `link-ignore`        | —                     | Regex patterns (one per line) of URLs to skip.                               |
-| `link-timeout`       | `10`                  | Seconds per link request.                                                    |
-| `link-concurrency`   | `8`                   | Parallel link requests.                                                      |
-| `fail-on`            | `error`               | `error`, `warning` or `never`.                                               |
-| `comment`            | `false`               | Post / update the PR (or commit) comment.                                    |
-| `comment-mode`       | `update`              | `update` (single sticky comment) or `new`.                                   |
-| `config-file`        | `.seo-audit.yml`      | Optional config file (overrides inputs above).                               |
-| `github-token`       | `${{ github.token }}` | Token used to post the comment.                                              |
+| Input                | Default               | Description                                                                                                                                                        |
+| -------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `base-url`           | —                     | Base URL to audit. Required unless `static-dir` is set.                                                                                                            |
+| `static-dir`         | —                     | Directory to serve locally on a random port (e.g. `./dist`).                                                                                                       |
+| `start-command`      | —                     | Command that starts your server; the action waits for `base-url` to respond.                                                                                       |
+| `wait-timeout`       | `60`                  | Seconds to wait for the server to be ready.                                                                                                                        |
+| `max-pages`          | `50`                  | Maximum pages audited (caps wildcard crawling).                                                                                                                    |
+| `paths`              | `/`                   | Paths to audit (newline or comma separated). A trailing `*` (`/blog/*`, `/*`) also audits every page found by following links under that path (up to `max-pages`). |
+| `lighthouse`         | `true`                | Run Lighthouse.                                                                                                                                                    |
+| `lighthouse-preset`  | `mobile`              | `mobile` or `desktop`.                                                                                                                                             |
+| `lighthouse-runs`    | `1`                   | Number of runs per page; the median is kept.                                                                                                                       |
+| `min-performance`    | `0`                   | Minimum Performance score (0 = report only).                                                                                                                       |
+| `min-accessibility`  | `0`                   | Minimum Accessibility score.                                                                                                                                       |
+| `min-best-practices` | `0`                   | Minimum Best Practices score.                                                                                                                                      |
+| `min-seo`            | `90`                  | Minimum Lighthouse SEO score.                                                                                                                                      |
+| `check-links`        | `internal`            | `none`, `internal` or `all`.                                                                                                                                       |
+| `link-ignore`        | —                     | Regex patterns (one per line) of URLs to skip.                                                                                                                     |
+| `link-timeout`       | `10`                  | Seconds per link request.                                                                                                                                          |
+| `link-concurrency`   | `8`                   | Parallel link requests.                                                                                                                                            |
+| `fail-on`            | `error`               | `error`, `warning` or `never`.                                                                                                                                     |
+| `comment`            | `false`               | Post / update the PR (or commit) comment.                                                                                                                          |
+| `comment-mode`       | `update`              | `update` (single sticky comment) or `new`.                                                                                                                         |
+| `config-file`        | `.seo-audit.yml`      | Optional config file (overrides inputs above).                                                                                                                     |
+| `github-token`       | `${{ github.token }}` | Token used to post the comment.                                                                                                                                    |
 
 ## Outputs
 

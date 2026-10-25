@@ -7,6 +7,10 @@ All notable changes to this project are documented here. Format based on
 
 ## [1.2.0] - 2026-10-25
 
+### Added
+
+- Wildcard paths: `/blog/*` (or `/*`) audits the page and every page reachable by links under that prefix, capped by the new `max-pages` input (default 50).
+
 ### Changed
 
 - **`comment` now defaults to `false`.** Set `comment: true` to post the PR / commit comment (needs `pull-requests: write` or `contents: write`). The job summary, JSON report and outputs are always produced.

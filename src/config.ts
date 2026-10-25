@@ -15,6 +15,7 @@ export interface Config {
   staticDir?: string;
   startCommand?: string;
   waitTimeout: number;
+  maxPages: number;
   paths: string[];
   lighthouse: {
     enabled: boolean;
@@ -43,6 +44,7 @@ export const INPUT_NAMES = [
   'static-dir',
   'start-command',
   'wait-timeout',
+  'max-pages',
   'paths',
   'lighthouse',
   'lighthouse-preset',
@@ -154,6 +156,7 @@ const inputSchema = z.object({
   'static-dir': z.string().optional(),
   'start-command': z.string().optional(),
   'wait-timeout': num.pipe(seconds).default(60),
+  'max-pages': num.pipe(z.number().int().min(1).max(500)).default(50),
   paths: z.string().default('/'),
   lighthouse: bool.default(true),
   'lighthouse-preset': z.enum(['mobile', 'desktop']).default('mobile'),
@@ -210,6 +213,7 @@ export function resolveConfig(inputs: Record<string, string>, fileText?: string)
     staticDir: i['static-dir'],
     startCommand: i['start-command'],
     waitTimeout: f['wait-timeout'] ?? i['wait-timeout'],
+    maxPages: i['max-pages'],
     paths: [...new Set(splitList(f.paths ?? i.paths).map(normalizePath))],
     lighthouse: {
       enabled: f.lighthouse?.enabled ?? i.lighthouse,
