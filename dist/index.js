@@ -109497,7 +109497,66 @@ function findDuplicateTitles(pages, config) {
     return out;
 }
 
+;// CONCATENATED MODULE: ./src/seo/canonical-target.ts
+
+
+
+const NOINDEX = /(^|[\s,])(noindex|none)([\s,]|$)/i;
+/**
+ * "canonical points to an indexable page": fetch the canonical target and error if it is not 2xx or is noindex.
+ * Only same-origin targets are fetched (no outbound requests driven by page content); the target of an
+ * audited page is mapped back onto the audited base URL, since canonicals usually carry the production host.
+ */
+async function canonicalTargetFindings(html, pageUrl, baseUrl, config) {
+    if (config.rules.canonical.severity === 'off')
+        return [];
+    const $ = load_parse_load(html);
+    const links = $('link[rel~="canonical" i]');
+    if (links.length !== 1)
+        return [];
+    let target;
+    try {
+        target = new URL(links.attr('href') ?? '', pageUrl);
+    }
+    catch {
+        return [];
+    }
+    const base = new URL(baseUrl);
+    if (!/^https?:$/.test(target.protocol))
+        return [];
+    // Canonicals carry the production host: probe the same path on the audited target instead.
+    const probe = new URL(target.pathname + target.search, base);
+    if (probe.toString() === new URL(pageUrl).toString())
+        return [];
+    const make = (message) => [
+        {
+            rule: 'canonical',
+            severity: config.rules.canonical.severity === 'warning' ? 'warning' : 'error',
+            message,
+        },
+    ];
+    try {
+        const res = await fetchPage(baseUrl, probe.pathname + probe.search, 15_000);
+        if (res.status < 200 || res.status >= 300)
+            return make(`canonical target ${target.pathname} is not indexable (HTTP ${res.status})`);
+        const noindex = NOINDEX.test(res.headers['x-robots-tag'] ?? '') ||
+            runSeoRules({
+                $: load_parse_load(res.html),
+                url: res.finalUrl,
+                headers: res.headers,
+                config,
+            }).some((f) => f.rule === 'indexability');
+        if (noindex)
+            return make(`canonical target ${target.pathname} is not indexable (noindex)`);
+    }
+    catch (e) {
+        return make(`canonical target ${target.pathname} could not be fetched (${e.message})`);
+    }
+    return [];
+}
+
 ;// CONCATENATED MODULE: ./src/audit.ts
+
 
 
 
@@ -109552,11 +109611,20 @@ async function auditPage(baseUrl, path, config, checker) {
         ignore: config.links.ignore,
         origin: new URL(baseUrl).origin,
     });
-    const [seo, linkFindings] = await Promise.all([
+    const [seo, linkFindings, canonicalTarget] = await Promise.all([
         Promise.resolve(runSeoRules({ $, url: page.finalUrl, headers: page.headers, config })),
         checkPageLinks(checker, links),
+        canonicalTargetFindings(page.html, page.finalUrl, baseUrl, config),
     ]);
-    return { result: { path, url, status: page.status, findings: [...seo, ...linkFindings] }, $ };
+    return {
+        result: {
+            path,
+            url,
+            status: page.status,
+            findings: [...seo, ...canonicalTarget, ...linkFindings],
+        },
+        $,
+    };
 }
 /** Pages in parallel (SEO + links), then Lighthouse sequentially, then aggregation. */
 async function runAudit(baseUrl, config) {

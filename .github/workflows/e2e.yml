@@ -6,6 +6,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write
 
 jobs:
   good:
@@ -42,3 +43,20 @@ jobs:
           echo "passed=$PASSED errors=$ERRORS"
           test "$PASSED" = "false"
           test "$ERRORS" -gt 0
+
+  comment:
+    name: Comment on the PR
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./
+        continue-on-error: true
+        with:
+          static-dir: test/fixtures/site
+          paths: /,/about/,/bad/,/long-title/
+          fail-on: never
+          lighthouse-runs: 1

@@ -5,6 +5,13 @@ All notable changes to this project are documented here. Format based on
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-25
+
+### Added
+
+- `canonical` rule: error when the canonical target is not 2xx or is `noindex` (same-origin probing only).
+- Screenshot of a real PR comment in the README; E2E workflow now also posts a real comment on PRs.
+
 ## [1.0.1] - 2026-10-25
 
 ### Security

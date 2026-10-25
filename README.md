@@ -62,6 +62,8 @@ permissions:
 
 Set `comment: false` to only use the job summary.
 
+![Example PR comment](docs/assets/comment.png)
+
 ## Quick start
 
 ### Static site (built in the workflow)

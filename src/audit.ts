@@ -8,6 +8,7 @@ import { startLighthouse } from './lighthouse/run.js';
 import { thresholdFailures } from './lighthouse/scores.js';
 import { buildReport } from './report/aggregate.js';
 import type { AuditReport, PageResult } from './report/types.js';
+import { canonicalTargetFindings } from './seo/canonical-target.js';
 import { findDuplicateTitles, runSeoRules } from './seo/index.js';
 import type { Finding } from './seo/types.js';
 
@@ -61,11 +62,20 @@ async function auditPage(
     ignore: config.links.ignore,
     origin: new URL(baseUrl).origin,
   });
-  const [seo, linkFindings] = await Promise.all([
+  const [seo, linkFindings, canonicalTarget] = await Promise.all([
     Promise.resolve(runSeoRules({ $, url: page.finalUrl, headers: page.headers, config })),
     checkPageLinks(checker, links),
+    canonicalTargetFindings(page.html, page.finalUrl, baseUrl, config),
   ]);
-  return { result: { path, url, status: page.status, findings: [...seo, ...linkFindings] }, $ };
+  return {
+    result: {
+      path,
+      url,
+      status: page.status,
+      findings: [...seo, ...canonicalTarget, ...linkFindings],
+    },
+    $,
+  };
 }
 
 /** Pages in parallel (SEO + links), then Lighthouse sequentially, then aggregation. */
